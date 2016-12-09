@@ -7,26 +7,17 @@ import tensorflow as tf
 from timeit import default_timer
 # hyperparameters
 n_obs = 80 * 80  # dimensionality of observations
-h = 200  # number of hidden layer neurons
+h = 50  # number of hidden layer neurons
 n_actions = 3  # number of available actions
 learning_rate = 1e-3
-gamma = .99  # discount factor for rward
+gamma = .99  # discount factor for reward
 decay = 0.99  # decay rate for RMSProp gradients
-save_path = '/home/rhaque2/cs557/final_project/cnn_3/pong_cnn_3.ckpt'
-log_path = '/home/rhaque2/cs557/final_project/cnn_3/log_cnn_3.txt'
 monitor = True
 save_path = '/Users/rafihaque/logs/'
-model_path = save_path + 'pong_cnn_3.ckpt-1750'
-
+model_path = save_path + 'pong_h50.ckpt-11300'
 # gamespace
 env = gym.make("Pong-v0")  # environment info
-observation = env.reset()
-prev_x = None
-xs, rs, ys = [], [], []
-running_reward = None
-reward_sum = 0
-episode_number = 0
-if monitor:
+Å†if monitor:
     env.monitor.start(save_path, force=True, seed=0)
 observation = env.reset()
 prev_x = None
@@ -35,40 +26,25 @@ running_reward = None
 reward_sum = 0
 episode_number = 0
 
-## initialize mode
+# initialize model
 tf_model = {}
 with tf.variable_scope('layer_one', reuse=False):
-    tf_model['W1']= tf.get_variable("W1", shape=[8,8,1,4], initializer=tf.contrib.layers.xavier_initializer())
-with tf.variable_scope('layer_three', reuse=False):
-    tf_model['W2'] = tf.get_variable("W2", shape=[40 * 40 * 4, 64], initializer=tf.contrib.layers.xavier_initializer())
-with tf.variable_scope('layer_four', reuse=False):
-    tf_model['W3'] = tf.get_variable("W3", shape=[64, n_actions], initializer=tf.contrib.layers.xavier_initializer())
+    xavier_l1 = tf.truncated_normal_initializer(mean=0, stddev=1. / np.sqrt(n_obs), dtype=tf.float32)
+    tf_model['W1'] = tf.get_variable("W1", [n_obs, h], initializer=xavier_l1)
+with tf.variable_scope('layer_two', reuse=False):
+    xavier_l2 = tf.truncated_normal_initializer(mean=0, stddev=1. / np.sqrt(h), dtype=tf.float32)
+    tf_model['W2'] = tf.get_variable("W2", [h, n_actions], initializer=xavier_l2)
 
 
 
 
 
 def tf_policy_forward(x):  # x ~ [1,D]
-    image_size = 80
-    h = tf.reshape(x,[-1,image_size,image_size,1])
-    h = tf.nn.relu(conv2d(h, tf_model['W1']))
-
-    h = max_pool_2x2(h)
-    h = tf.reshape(h,[-1,40*40*4])
-    h = tf.nn.relu(tf.matmul(h,tf_model['W2']))
-    h = tf.matmul(h,tf_model['W3'])
-    return tf.nn.softmax(h)
-
-def conv2d(x, W):
-  return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
-
-def max_pool_2x2(x):
-  return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],strides=[1, 2, 2, 1], padding='SAME')
-
-
-
-
-
+    h = tf.matmul(x, tf_model['W1'])
+    h = tf.nn.relu(h)
+    logp = tf.matmul(h, tf_model['W2'])
+    p = tf.nn.softmax(logp)
+    return p
 
 # downsampling
 def prepro(I):
@@ -122,3 +98,9 @@ while not done:
     reward_sum += reward
 
 print 'Score: {}'.format(reward_sum)
+
+
+
+
+
+

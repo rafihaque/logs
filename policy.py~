@@ -13,7 +13,7 @@ learning_rate = 1e-3
 gamma = .99  # discount factor for reward
 decay = 0.99  # decay rate for RMSProp gradients
 monitor = True
-save_path = '/Users/rafihaque/logs/'
+save_path = '~/logs/'
 model_path = save_path + 'pong_h50.ckpt-11300'
 # gamespace
 env = gym.make("Pong-v0")  # environment info

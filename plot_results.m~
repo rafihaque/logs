@@ -1,0 +1,9 @@
+function plot_results(name)
+
+
+% cnn
+data = csvread('~/final_project_logs/log_cnn.txt');
+plot(data(:,1),smooth(data(:,2)))
+saveas(gcf,fullfile(save_dir,name),'pdf')
+keyboard
+ 
